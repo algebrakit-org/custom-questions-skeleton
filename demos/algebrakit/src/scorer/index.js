@@ -10,6 +10,11 @@ export default class Scorer {
      * @returns {boolean}
      */
     isValid() {
+        // TODO: 
+        // Let's discuss how we can make use of other information Algebrakit provides, such as
+        // - skill tags      (references to known mathematical skills and mistakes)
+        // - progress        (value between 0-100)
+        // - partial scoring (marksTotal, marksEarned)
         if(this.response && this.response.data){
             let scoring = this.response.data.scoring;
             if(scoring) {

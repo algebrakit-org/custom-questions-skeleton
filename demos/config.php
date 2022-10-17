@@ -5,7 +5,6 @@ use LearnositySdk\Utils\Uuid;
 
 $sessionId = $_REQUEST['session_id'] ?? Uuid::generate();
 $state = $_REQUEST['state'] ?? 'initial';
-$akitSessionId = $_REQUEST['akit_session_id'] ?? null;
 
 function getCredentials()
 {

@@ -16,13 +16,13 @@ $request = '
                 "defaults": {
                   "type": "custom",
                   "stimulus": "Enter an optional stimulus here",
-                  "akit_id" : "0559dfb3-e548-4da3-909a-ad3526722368",
+                  "akit_exercise_id" : "0559dfb3-e548-4da3-909a-ad3526722368",
                   "instant_feedback": true,
                   "js": {
-                    "question": "/dist/question.js",
-                    "scorer": "/dist/scorer.js"
+                    "question": "http://localhost/akit/learnosity-akit/dist/question.js",
+                    "scorer": "http://localhost/akit/learnosity-akit/dist/scorer.js"
                   },
-                  "css": "/dist/question.css"
+                  "css": ""
                 }
               }
             ]
@@ -32,17 +32,17 @@ $request = '
               "custom_type": "akit_question_skeleton",
               "type": "custom",
               "name": "Algebrakit Question",
-              "editor_layout": "/dist/authoring_custom_layout.html",
+              "editor_layout": "http://localhost/akit/learnosity-akit/dist/authoring_custom_layout.html",
               "js": {
-                "question": "/dist/question.js",
-                "scorer": "/dist/scorer.js"
+                "question": "http://localhost/akit/learnosity-akit/dist/question.js",
+                "scorer": "http://localhost/akit/learnosity-akit/dist/scorer.js"
               },
-              "css": "/dist/question.css",
+              "css": "",
               "version": "v1.0.0",
               "editor_schema": {
                 "hidden_question": false,
                 "properties": {
-                    "akit_id": {
+                    "akit_exercise_id": {
                       "type": "string",
                       "name": "Algebrakit ID",
                       "description": "Reference to the exercise in the Algebrakit CMS",

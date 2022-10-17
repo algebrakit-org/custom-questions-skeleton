@@ -9,9 +9,8 @@
     if (redirectSection) {
         const reload = (state) => {
             const sessionId = window.activity.session_id;
-            const akitSessionId = window.activity.questions[0].akit_session_id;
 
-            window.location.href = `?state=${state}&session_id=${sessionId}&akit_session_id=${akitSessionId}`;
+            window.location.href = `?state=${state}&session_id=${sessionId}`;
         };
 
         redirectSection
