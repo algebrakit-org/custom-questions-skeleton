@@ -1,6 +1,11 @@
 <?php
 include_once '../config.php';
 
+// $QUESTION_URL = "http://localhost/akit/learnosity-akit/dist/question.js";
+// $SCORER_URL   = "http://localhost/akit/learnosity-akit/dist/scorer.js";
+$QUESTION_URL = "https://demo.algebrakit.nl/learnosity/question.js";
+$SCORER_URL   = "https://demo.algebrakit.nl/learnosity/scorer.js";
+
 $responseId = "custom-$sessionId";
 $request = '{
     "state": "' . $state . '",
@@ -12,8 +17,8 @@ $request = '{
           "type": "custom",
           "stimulus": "Stimulus of the custom question",
           "js": {
-            "question": "http://localhost/akit/learnosity-akit/dist/question.js",
-            "scorer": "http://localhost/akit/learnosity-akit/dist/scorer.js"
+            "question": "'.$QUESTION_URL.'",
+            "scorer": "'.$SCORER_URL.'"
           },
           "css": "",
           "instant_feedback": true,

@@ -10,8 +10,16 @@ const SESSION_CACHE = {
     sessionId: null
 };
 
-// const AKIT_SCRIPT_SRC = 'https://widgets.algebrakit.com/akit-widgets.min.js';
-const AKIT_SCRIPT_SRC = 'http://localhost:4000/akit-widgets.js';
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// note: this is an unsecure solution, only allowed for testing and demo
+// The API key should not be available in the frontend
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+const AKIT_API_KEY = 'bGVhcm5vc2l0eS5kZW1vLWludGVncmF0aW9uLjRmMzg3MTFlMDQ0MTJmMGZkZTk2NjNhMmVjMzVhYTU5M2VjYWM3ZTBiZDQ2ZWUyM2MxYmRlZjY1ZWJlNzc5NDQ1MzY5MjE2NjhiZDY2ZWY2MmNhMjE1ZmVlNDRmZjQ4MA==';
+const AKIT_HOST  = 'https://api.staging.algebrakit.com';
+const AKIT_SCRIPT_SRC = 'https://widgets.staging.algebrakit.com/akit-widgets.min.js';
+
+// const AKIT_HOST  = 'http://localhost:3000';
+// const AKIT_SCRIPT_SRC = 'http://localhost:4000/akit-widgets.js';
 const AKIT_CONFIG = {
         config: {
             styles: {
@@ -72,7 +80,7 @@ export default class AlgebrakitQuestion {
             // - add the Algebrakit x-api-key header to the request.
             
             promise = this.post(
-                '/akit-proxy.php?url=/session/create', 
+                '/session/create', 
                 {
                     exercises: [{
                         exerciseId: this.akitExerciseId,
@@ -223,7 +231,8 @@ export default class AlgebrakitQuestion {
 
         return new Promise(function (resolve, reject) {
             var xhr = new XMLHttpRequest();
-            xhr.open('POST', url, true);
+            xhr.open('POST', AKIT_HOST+url, true);
+            xhr.setRequestHeader('x-api-key', AKIT_API_KEY);
             xhr.onload = function () {
                 if (xhr.status === 200) {// This is called even on 404 etc, so check the status
                     var contentType = xhr.getResponseHeader('content-type');
