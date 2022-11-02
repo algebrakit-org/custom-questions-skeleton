@@ -7,7 +7,8 @@ import { v4 as uuidv4 } from 'uuid';
 // our own session ID and reuse it as long as the same Algebrakit exercise is referenced.
 const SESSION_CACHE = {
     exerciseId: null,
-    sessionId: null
+    sessionId: null,
+    reponseId: null    // identifies the learnosity question. Is changed whenever the question changes
 };
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -156,7 +157,7 @@ export default class AlgebrakitQuestion {
         if(sessionId.split('-').length!=5) sessionId = null;
 
         if(!sessionId) {
-            if(SESSION_CACHE.exerciseId == this.akitExerciseId) {
+            if(SESSION_CACHE.exerciseId == this.akitExerciseId && SESSION_CACHE.responseId == responseId ) {
                 // Learnosity generated a temporary response Id for previewing
                 // We have to create our own session. Cache it using the exercise ID as key
                 sessionId = SESSION_CACHE.sessionId;
@@ -165,6 +166,7 @@ export default class AlgebrakitQuestion {
                 sessionId = uuidv4();
                 SESSION_CACHE.exerciseId = this.akitExerciseId;
                 SESSION_CACHE.sessionId = sessionId;
+                SESSION_CACHE.responseId = responseId;
             }
         }
 
