@@ -1,13 +1,13 @@
 <?php
 include_once '../config.php';
 
-// $QUESTION_URL = "http://localhost/akit/learnosity-akit/dist/question.js";
-// $SCORER_URL   = "http://localhost/akit/learnosity-akit/dist/scorer.js";
-// $LAYOUT_URL   = "http://localhost/akit/learnosity-akit/dist/authoring_custom_layout.html";
+$QUESTION_URL = "http://localhost/akit/learnosity-akit/dist/question.js";
+$SCORER_URL   = "http://localhost/akit/learnosity-akit/dist/scorer.js";
+$LAYOUT_URL   = "http://localhost/akit/learnosity-akit/dist/authoring_custom_layout.html";
 
-$QUESTION_URL = "https://demo.algebrakit.nl/learnosity/question.js";
-$SCORER_URL   = "https://demo.algebrakit.nl/learnosity/scorer.js";
-$LAYOUT_URL   = "https://demo.algebrakit.nl/learnosity/authoring_custom_layout.html";
+// $QUESTION_URL = "https://demo.algebrakit.nl/learnosity/question.js";
+// $SCORER_URL   = "https://demo.algebrakit.nl/learnosity/scorer.js";
+// $LAYOUT_URL   = "https://demo.algebrakit.nl/learnosity/authoring_custom_layout.html";
 
 $request = '
 {

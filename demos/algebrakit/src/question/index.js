@@ -74,40 +74,35 @@ export default class AlgebrakitQuestion {
         const { question, response } = init;
 
         let promise = Promise.resolve();
-        if(init.state=='initial' || this.forceCreateAkitSession) {
-            // Create an Algebrakit session through a secure proxy. 
-            // This proxy needs to be provided by Learnosity and needs to take care of the following:
-            // - authenticate that this is a valid learnosity user, having an Algebrakit license
-            // - add the Algebrakit x-api-key header to the request.
-            
-            promise = this.post(
-                '/session/create', 
-                {
-                    exercises: [{
-                        exerciseId: this.akitExerciseId,
-                        version: 'latest',
-                        _overrideSessionId: this.sessionId
-                    }],
-                    assessmentMode: false,
-                    'api-version': 2
-                }).then(resp => {
-                    if(!resp || resp.length!=1 || !resp[0].success) throw Error('Failed to create Algebrakit session');
-        
-                    // For simplicity: assuming we generated a single session for a single exercise ID (no batch processing)
-                    this.session = resp[0].sessions[0];
-                });
-        } else {
-            // 'resume' or 'review': session is already available. 
-        }
 
+        
         // Create an Algebrakit session through a secure proxy. 
         // This proxy needs to be provided by Learnosity and needs to take care of the following:
         // - authenticate that this is a valid learnosity user, having an Algebrakit license
         // - add the Algebrakit x-api-key header to the request.
+        // update 12-2022: Always call create session, because init.state is unreliable
+        //                 If the session already exists, thn this session will be retrieved
+        promise = this.post(
+            '/session/create', 
+            {
+                exercises: [{
+                    exerciseId: this.akitExerciseId,
+                    version: 'latest',
+                    _overrideSessionId: this.sessionId
+                }],
+                assessmentMode: false,
+                'api-version': 2
+            }).then(resp => {
+                if(!resp || resp.length!=1 || !resp[0].success) throw Error('Failed to create Algebrakit session');
+    
+                // For simplicity: assuming we generated a single session for a single exercise ID (no batch processing)
+                this.session = resp[0].sessions[0];
+            });
+
         return promise.then(() => {
 
             let akitStr;
-            if(init.state=='initial' && this.session && this.session.html) {
+            if(this.session && this.session.html) {
                 //prevent roundtrip to the server for initialization by using the optimized html
                 akitStr = this.session.html;
             } else if(this.sessionId) {

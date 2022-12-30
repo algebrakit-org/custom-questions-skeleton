@@ -1,10 +1,10 @@
 <?php
 include_once '../config.php';
 
-// $QUESTION_URL = "http://localhost/akit/learnosity-akit/dist/question.js";
-// $SCORER_URL   = "http://localhost/akit/learnosity-akit/dist/scorer.js";
-$QUESTION_URL = "https://demo.algebrakit.nl/learnosity/question.js";
-$SCORER_URL   = "https://demo.algebrakit.nl/learnosity/scorer.js";
+$QUESTION_URL = "http://localhost/akit/learnosity-akit/dist/question.js";
+$SCORER_URL   = "http://localhost/akit/learnosity-akit/dist/scorer.js";
+// $QUESTION_URL = "https://demo.algebrakit.nl/learnosity/question.js";
+// $SCORER_URL   = "https://demo.algebrakit.nl/learnosity/scorer.js";
 
 $responseId = "custom-$sessionId";
 $request = '{
