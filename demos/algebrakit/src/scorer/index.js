@@ -46,7 +46,7 @@ export default class Scorer {
         if(this.response && this.response.data){
             let scoring = this.response.data.scoring;
             if(scoring) {
-                return scoring.marksEarned;
+                return scoring.marksEarned / scoring.marksTotal * this.maxScore();
             }
         }
         return 0;
@@ -57,7 +57,7 @@ export default class Scorer {
      * @returns {number}
      */
     maxScore() {
-        return  this.question.marks_total;
+        return  this.question.marks_total? this.question.marks_total: 1;
     }
 
     /**

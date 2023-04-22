@@ -7,11 +7,20 @@ import { v4 as uuidv4 } from 'uuid';
 // our own session ID and reuse it as long as the same Algebrakit exercise is referenced.
 const SESSION_CACHE = {
     exerciseId: null,
-    sessionId: null
+    sessionId: null,
+    reponseId: null    // identifies the learnosity question. Is changed whenever the question changes
 };
 
-// const AKIT_SCRIPT_SRC = 'https://widgets.algebrakit.com/akit-widgets.min.js';
-const AKIT_SCRIPT_SRC = 'http://localhost:4000/akit-widgets.js';
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// note: this is an unsecure solution, only allowed for testing and demo
+// The API key should not be available in the frontend
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+const AKIT_API_KEY = 'bGVhcm5vc2l0eS5kZW1vLWludGVncmF0aW9uLjRmMzg3MTFlMDQ0MTJmMGZkZTk2NjNhMmVjMzVhYTU5M2VjYWM3ZTBiZDQ2ZWUyM2MxYmRlZjY1ZWJlNzc5NDQ1MzY5MjE2NjhiZDY2ZWY2MmNhMjE1ZmVlNDRmZjQ4MA==';
+const AKIT_HOST  = 'https://api.staging.algebrakit.com';
+const AKIT_SCRIPT_SRC = 'https://widgets.staging.algebrakit.com/akit-widgets.min.js';
+
+// const AKIT_HOST  = 'http://localhost:3000';
+// const AKIT_SCRIPT_SRC = 'http://localhost:4000/akit-widgets.js';
 const AKIT_CONFIG = {
         config: {
             styles: {
@@ -65,40 +74,35 @@ export default class AlgebrakitQuestion {
         const { question, response } = init;
 
         let promise = Promise.resolve();
-        if(init.state=='initial' || this.forceCreateAkitSession) {
-            // Create an Algebrakit session through a secure proxy. 
-            // This proxy needs to be provided by Learnosity and needs to take care of the following:
-            // - authenticate that this is a valid learnosity user, having an Algebrakit license
-            // - add the Algebrakit x-api-key header to the request.
-            
-            promise = this.post(
-                '/akit-proxy.php?url=/session/create', 
-                {
-                    exercises: [{
-                        exerciseId: this.akitExerciseId,
-                        version: 'latest',
-                        _overrideSessionId: this.sessionId
-                    }],
-                    assessmentMode: false,
-                    'api-version': 2
-                }).then(resp => {
-                    if(!resp || resp.length!=1 || !resp[0].success) throw Error('Failed to create Algebrakit session');
-        
-                    // For simplicity: assuming we generated a single session for a single exercise ID (no batch processing)
-                    this.session = resp[0].sessions[0];
-                });
-        } else {
-            // 'resume' or 'review': session is already available. 
-        }
 
+        
         // Create an Algebrakit session through a secure proxy. 
         // This proxy needs to be provided by Learnosity and needs to take care of the following:
         // - authenticate that this is a valid learnosity user, having an Algebrakit license
         // - add the Algebrakit x-api-key header to the request.
+        // update 12-2022: Always call create session, because init.state is unreliable
+        //                 If the session already exists, thn this session will be retrieved
+        promise = this.post(
+            '/session/create', 
+            {
+                exercises: [{
+                    exerciseId: this.akitExerciseId,
+                    version: 'latest',
+                    _overrideSessionId: this.sessionId
+                }],
+                assessmentMode: false,
+                'api-version': 2
+            }).then(resp => {
+                if(!resp || resp.length!=1 || !resp[0].success) throw Error('Failed to create Algebrakit session');
+    
+                // For simplicity: assuming we generated a single session for a single exercise ID (no batch processing)
+                this.session = resp[0].sessions[0];
+            });
+
         return promise.then(() => {
 
             let akitStr;
-            if(init.state=='initial' && this.session && this.session.html) {
+            if(this.session && this.session.html) {
                 //prevent roundtrip to the server for initialization by using the optimized html
                 akitStr = this.session.html;
             } else if(this.sessionId) {
@@ -148,7 +152,7 @@ export default class AlgebrakitQuestion {
         if(sessionId.split('-').length!=5) sessionId = null;
 
         if(!sessionId) {
-            if(SESSION_CACHE.exerciseId == this.akitExerciseId) {
+            if(SESSION_CACHE.exerciseId == this.akitExerciseId && SESSION_CACHE.responseId == responseId ) {
                 // Learnosity generated a temporary response Id for previewing
                 // We have to create our own session. Cache it using the exercise ID as key
                 sessionId = SESSION_CACHE.sessionId;
@@ -157,6 +161,7 @@ export default class AlgebrakitQuestion {
                 sessionId = uuidv4();
                 SESSION_CACHE.exerciseId = this.akitExerciseId;
                 SESSION_CACHE.sessionId = sessionId;
+                SESSION_CACHE.responseId = responseId;
             }
         }
 
@@ -189,6 +194,7 @@ export default class AlgebrakitQuestion {
                 case 'exercise-created': {
                     break;
                 }   
+                case 'interaction-submit-state-changed':
                 case 'interaction-evaluate': 
                 case 'interaction-hint': {
                     if(!obj.data.replay) {
@@ -223,7 +229,8 @@ export default class AlgebrakitQuestion {
 
         return new Promise(function (resolve, reject) {
             var xhr = new XMLHttpRequest();
-            xhr.open('POST', url, true);
+            xhr.open('POST', AKIT_HOST+url, true);
+            xhr.setRequestHeader('x-api-key', AKIT_API_KEY);
             xhr.onload = function () {
                 if (xhr.status === 200) {// This is called even on 404 etc, so check the status
                     var contentType = xhr.getResponseHeader('content-type');

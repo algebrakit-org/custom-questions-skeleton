@@ -1,6 +1,14 @@
 <?php
 include_once '../config.php';
 
+$QUESTION_URL = "http://localhost/akit/learnosity-akit/dist/question.js";
+$SCORER_URL   = "http://localhost/akit/learnosity-akit/dist/scorer.js";
+$LAYOUT_URL   = "http://localhost/akit/learnosity-akit/dist/authoring_custom_layout.html";
+
+// $QUESTION_URL = "https://demo.algebrakit.nl/learnosity/question.js";
+// $SCORER_URL   = "https://demo.algebrakit.nl/learnosity/scorer.js";
+// $LAYOUT_URL   = "https://demo.algebrakit.nl/learnosity/authoring_custom_layout.html";
+
 $request = '
 {
   "config": {
@@ -19,8 +27,8 @@ $request = '
                   "akit_exercise_id" : "0559dfb3-e548-4da3-909a-ad3526722368",
                   "instant_feedback": true,
                   "js": {
-                    "question": "http://localhost/akit/learnosity-akit/dist/question.js",
-                    "scorer": "http://localhost/akit/learnosity-akit/dist/scorer.js"
+                    "question": "'.$QUESTION_URL.'",
+                    "scorer": "'.$SCORER_URL.'"
                   },
                   "css": ""
                 }
@@ -32,10 +40,10 @@ $request = '
               "custom_type": "akit_question_skeleton",
               "type": "custom",
               "name": "Algebrakit Question",
-              "editor_layout": "http://localhost/akit/learnosity-akit/dist/authoring_custom_layout.html",
+              "editor_layout": "'.$LAYOUT_URL.'",
               "js": {
-                "question": "http://localhost/akit/learnosity-akit/dist/question.js",
-                "scorer": "http://localhost/akit/learnosity-akit/dist/scorer.js"
+                "question": "'.$QUESTION_URL.'",
+                "scorer": "'.$SCORER_URL.'"
               },
               "css": "",
               "version": "v1.0.0",
