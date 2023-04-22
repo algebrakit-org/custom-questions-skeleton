@@ -22,7 +22,9 @@ $request = '{
           },
           "css": "",
           "instant_feedback": true,
-          "akit_exercise_id": "0559dfb3-e548-4da3-909a-ad3526722368" 
+          "akit_exercise_id": "0559dfb3-e548-4da3-909a-ad3526722368",
+          "valid_response": "not applicable",
+          "score": 1
         }
     ]
 }';

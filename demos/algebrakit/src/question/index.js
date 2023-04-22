@@ -194,6 +194,7 @@ export default class AlgebrakitQuestion {
                 case 'exercise-created': {
                     break;
                 }   
+                case 'interaction-submit-state-changed':
                 case 'interaction-evaluate': 
                 case 'interaction-hint': {
                     if(!obj.data.replay) {
