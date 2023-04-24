@@ -19,7 +19,7 @@ jobs:
       - name: Deploy
         uses: reggionick/s3-deploy@v3
         with:
-          folder: ./
+          folder: ./dist
           bucket: learnosity.prod.algebrakit.com
           bucket-region: eu-west-1
           dist-id: E1BL5Q2CCZ552E
