@@ -11,6 +11,7 @@ $request = '{
     "state": "' . $state . '",
     "session_id": "' . $sessionId . '",
     "showCorrectAnswers": true,
+    "custom_widget_options": {"domain": "'.$_SERVER['SERVER_NAME'].'"},
     "questions": [
         {
           "response_id": "' . $responseId . '",
@@ -21,9 +22,9 @@ $request = '{
             "scorer": "'.$SCORER_URL.'"
           },
           "css": "",
+          "valid_response": "not applicable",
           "instant_feedback": true,
           "akit_exercise_id": "0559dfb3-e548-4da3-909a-ad3526722368",
-          "valid_response": "not applicable",
           "score": 1
         }
     ]

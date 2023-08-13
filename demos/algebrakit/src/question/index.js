@@ -8,7 +8,8 @@ import { v4 as uuidv4 } from 'uuid';
 const SESSION_CACHE = {
     exerciseId: null,
     sessionId: null,
-    reponseId: null    // identifies the learnosity question. Is changed whenever the question changes
+    reponseId: null,    // identifies the learnosity question. Is changed whenever the question changes
+    interactions: null  // info on the interactions in this exercise
 };
 
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -16,11 +17,11 @@ const SESSION_CACHE = {
 // The API key should not be available in the frontend
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const AKIT_API_KEY = 'bGVhcm5vc2l0eS5kZW1vLWludGVncmF0aW9uLjRmMzg3MTFlMDQ0MTJmMGZkZTk2NjNhMmVjMzVhYTU5M2VjYWM3ZTBiZDQ2ZWUyM2MxYmRlZjY1ZWJlNzc5NDQ1MzY5MjE2NjhiZDY2ZWY2MmNhMjE1ZmVlNDRmZjQ4MA==';
-const AKIT_HOST  = 'https://api.staging.algebrakit.com';
-const AKIT_SCRIPT_SRC = 'https://widgets.staging.algebrakit.com/akit-widgets.min.js';
+// const AKIT_HOST  = 'https://api.staging.algebrakit.com';
+// const AKIT_SCRIPT_SRC = 'https://widgets.staging.algebrakit.com/akit-widgets.min.js';
 
-// const AKIT_HOST  = 'http://localhost:3000';
-// const AKIT_SCRIPT_SRC = 'http://localhost:4000/akit-widgets.js';
+const AKIT_HOST  = 'http://localhost:3000';
+const AKIT_SCRIPT_SRC = 'http://localhost:4000/akit-widgets.js';
 const AKIT_CONFIG = {
         config: {
             styles: {
@@ -42,29 +43,34 @@ const RESPONSE_ID_PREFIX = 'custom-';
 export default class AlgebrakitQuestion {
     constructor(init, lrnUtils) {
         this.init = init;
-        this.events = init.events;
         this.lrnUtils = lrnUtils;
+
+        this.events = init.events;
         this.el = init.$el.get(0);
-        this.akitExerciseId = init.question.akit_exercise_id;
+
+        // the question object that was used by the client to initialise the question
+        // See table 1 in https://help.learnosity.com/hc/en-us/articles/360000758817-Creating-Custom-Questions#scoring
+        let questionObj = init.question;
+        this.akitExerciseId = questionObj.akit_exercise_id; // exercise ID is given by the client
+
+        // Get the Algebrakit sessionId from Learnosity's response ID.
+        this.forceCreateAkitSession = false;  // will be set to true by getUUIDFromResponseId if we need to create our own session
+        let responseId = questionObj.response_id;
+        this.sessionId = this.getUUIDFromResponseId(responseId);
+
         this.exerciseElm = null;
         this.session = null;   // the response from /session/create
-        this.forceCreateAkitSession = false;
-
-        
-
-        let responseId = init.question.response_id;
-        this.sessionId = this.getUUIDFromResponseId(responseId);
         
         this.addAkitScriptTagIfNeccessary()
             .then(() => this.render())
             .then(() =>{
                 this.registerPublicMethods();
-                this.handleEvents();
 
                 if (init.state === 'review') {
                     init.getFacade().disable();
                 }
 
+                // let Learnosity know the question is rendered and ready
                 init.events.trigger('ready');
             });
     }
@@ -81,7 +87,7 @@ export default class AlgebrakitQuestion {
         // - authenticate that this is a valid learnosity user, having an Algebrakit license
         // - add the Algebrakit x-api-key header to the request.
         // update 12-2022: Always call create session, because init.state is unreliable
-        //                 If the session already exists, thn this session will be retrieved
+        //                 If the session already exists, than this session will be retrieved
         promise = this.post(
             '/session/create', 
             {
@@ -105,11 +111,14 @@ export default class AlgebrakitQuestion {
             if(this.session && this.session.html) {
                 //prevent roundtrip to the server for initialization by using the optimized html
                 akitStr = this.session.html;
+                this.sessionId = this.session.sessionId;
+                this.handleEvents();
             } else if(this.sessionId) {
                 //generic approach. The web component will retrieve info from the web service
                 let mode = '';
                 if(init.state=='review') mode = 'review-mode';
                 akitStr = `<akit-exercise session-id="${this.sessionId}" ${mode}></akit-exercise>`
+                this.handleEvents();
             } else {
                 akitStr = 'Not rendering Algebrakit exercise: no valid session ID';
             }
@@ -142,6 +151,14 @@ export default class AlgebrakitQuestion {
 
     }
 
+    /**
+     * The responseId is a unique ID given by Learnosity. Algebrakit uses a similar concept, called 'sessionId'. 
+     * It is simplest if the sessionId is equal to the responseId. That way, we don't have to manage a store that obtains
+     * the Algebrakit sessionId from the responseId. 
+     * During normal production, the resopnseId is a UUID. However, during previewing Learnosity uses a simpler id like
+     * 'custom-1' which we cannot use as a sessionId. In that case, we will create our own sessionId and store it in a 
+     * local cache. 
+     */
     getUUIDFromResponseId(responseId) {
         if(!responseId) return responseId = '';
 
@@ -149,20 +166,22 @@ export default class AlgebrakitQuestion {
             ?responseId.substring(RESPONSE_ID_PREFIX.length)
             :responseId;
 
-        if(sessionId.split('-').length!=5) sessionId = null;
+        // Is this a UUID, then return it
+        // This is the case during normal production
+        if(sessionId.split('-').length==5) return sessionId;
 
-        if(!sessionId) {
-            if(SESSION_CACHE.exerciseId == this.akitExerciseId && SESSION_CACHE.responseId == responseId ) {
-                // Learnosity generated a temporary response Id for previewing
-                // We have to create our own session. Cache it using the exercise ID as key
-                sessionId = SESSION_CACHE.sessionId;
-            } else {
-                this.forceCreateAkitSession = true;
-                sessionId = uuidv4();
-                SESSION_CACHE.exerciseId = this.akitExerciseId;
-                SESSION_CACHE.sessionId = sessionId;
-                SESSION_CACHE.responseId = responseId;
-            }
+        // When previewing in Learnosity, then Learnosity generated a temporary response Id.
+        // We create our own session ID and make sure it is reused while the same exercise ID is being reviewed
+        if(SESSION_CACHE.exerciseId == this.akitExerciseId && SESSION_CACHE.responseId == responseId ) {
+            // reuse the session ID we created earlier
+            sessionId = SESSION_CACHE.sessionId;
+        } else {
+            // create a session ID to be used during review
+            this.forceCreateAkitSession = true;
+            sessionId = uuidv4();
+            SESSION_CACHE.exerciseId = this.akitExerciseId;
+            SESSION_CACHE.sessionId = sessionId;
+            SESSION_CACHE.responseId = responseId;
         }
 
         return sessionId;
@@ -174,7 +193,11 @@ export default class AlgebrakitQuestion {
      */
     registerPublicMethods() {
         const { init } = this;
-        // Attach the methods you want on this object
+
+        // The facade object defines the public methods of Learnosity's Question instance. 
+        // Add or override public methods on the facade object to make those available on instances of the custom Question object.
+        // Example: clients can do something like this on Learnosity's Question API
+        // - questionsApp.question("custom-question-1").disable()
         const facade = init.getFacade();
 
         facade.disable = () => {
@@ -192,13 +215,27 @@ export default class AlgebrakitQuestion {
         AlgebraKIT.addExerciseListener(this.sessionId, obj => {
             switch(obj.event) {
                 case 'exercise-created': {
+                    // store information of interactions
+                    SESSION_CACHE.interactions = obj.data.interactions;
                     break;
                 }   
                 case 'interaction-submit-state-changed':
                 case 'interaction-evaluate': 
                 case 'interaction-hint': {
                     if(!obj.data.replay) {
-                        events.trigger('changed', obj)
+                        let scoreObj = {
+                            interactions: SESSION_CACHE.interactions,
+                            sessionId: obj.sessionId,
+                            refId: obj.refId,
+                            scoring: obj.data.scoring,
+                            progress: obj.data.progress,
+                            tags: obj.data.tags
+                        }
+                        events.trigger('changed', scoreObj)
+
+                        // this.getScore(this.sessionId).then(scoreResult => {
+                        //     events.trigger('changed', scoreResult)
+                        // });
                     }
                     break;
                 }
@@ -207,7 +244,7 @@ export default class AlgebrakitQuestion {
                     break;
                 }
             }
-        })
+        });
 
         // "validate" event can be triggered when Check Answer button is clicked or when public method .validate() is called
         // so developer needs to listen to this event to decide if he wants to display the correct answers to user or not
@@ -217,6 +254,15 @@ export default class AlgebrakitQuestion {
         events.on('validate', options => {
             this.exerciseElm.submit();
         });
+    }
+
+    getScore(sessionId) {
+        return this.post(
+            '/session/score', 
+            {
+                sessionId: sessionId,
+                'api-version': 2
+            });
     }
 
     /**
@@ -270,6 +316,10 @@ export default class AlgebrakitQuestion {
         });
     }
 
+    /**
+     * Load the Algebrakit frontend API by adding the <script src="https://widgets.algebrakit.com/akit-widgets.min.js"> to the DOM.
+     * Returns when the script is loaded and executed (and so the AlgebraKIT object is available).
+     */
     addAkitScriptTagIfNeccessary() {
         if(window.AlgebraKIT && window.AlgebraKIT._api) return Promise.resolve();
 
