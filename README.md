@@ -6,17 +6,22 @@
   An official Learnosity open-source project.</p>
   
 ---
+## Algebrakit deploy
+Commit and push to master. It will automatically deploy through Github actions.
 
 ## Table of Contents
 
-* [Overview: what's in the guideline?](#overview-what-does-it-contain)
-* [Available Demo Scripts](#available-demo-scripts)
-* [Test your Custom Question](#test-your-custom-question)
-* [Publish your custom question](#publish-your-custom-question)
-* [Development Recommendations](#development-recommendations)
-* [Next steps: additional documentation](#next-steps-additional-documentation)
-* [Contributing to this project](#contributing-to-this-project)
-* [License](#license)
+- [Algebrakit deploy](#algebrakit-deploy)
+- [Table of Contents](#table-of-contents)
+- [Overview: what's in the guideline?](#overview-whats-in-the-guideline)
+- [Available Demo Scripts](#available-demo-scripts)
+- [Test your custom question](#test-your-custom-question)
+- [Publish your custom question](#publish-your-custom-question)
+- [Development Recommendations](#development-recommendations)
+- [Next steps: additional documentation](#next-steps-additional-documentation)
+- [Contributing to this project](#contributing-to-this-project)
+  - [Adding new features or fixing bugs](#adding-new-features-or-fixing-bugs)
+- [License](#license)
 
 ## Overview: what's in the guideline?
 The Learnosity Custom Question/Feature Guideline provides the complete demos of some custom questions/features

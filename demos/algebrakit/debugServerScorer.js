@@ -8,74 +8,8 @@ Update the questionResponseJson with your question json & response
 
 // QuestionResponseJson that will be used to test your Scorer logic
 const questionResponseJson = {
-    question: {
-        type: 'custom',
-        js: {
-            question: '/dist/question.js',
-            scorer: '/dist/scorer.js'
-        },
-        css: '/dist/question.css',
-        instant_feedback: true,
-        // TODO - requires implementation - add the rest of your question json
-        akit_session_id: "bbc14779-70a6-49d7-975b-7622c4a2d6b3",
-        marks_total: 1
-    },
-    response: {
-        // TODO - Requires implementation - the shape of your question response
-        // value:
-        value: {
-            "sessionId": "bbc14779-70a6-49d7-975b-7622c4a2d6b3",
-            "refId": "dIcEW",
-            "event": "interaction-evaluate",
-            "data": {
-                "replay": false,
-                "exerciseFinished": false,
-                "progress": 0,
-                "items": [
-                    {
-                        "type": "expression",
-                        "status": "NO_MATCH",
-                        "input": [
-                            {
-                                "mimeType": "application/x-tex",
-                                "content": "$$2x=x$$"
-                            }
-                        ],
-                        "feedback": null
-                    }
-                ],
-                "scoring": {
-                    "marks": {
-                        "max": 0,
-                        "min": 0
-                    },
-                    "marksEarned": 0,
-                    "marksTotal": 1,
-                    "penalties": {
-                        "marksPenalty": 0,
-                        "hintsRequested": 0,
-                        "mathErrors": 2,
-                        "notationErrors": 0
-                    },
-                    "finished": false,
-                    "stepList": [
-                        {
-                            "parents": [],
-                            "name": "solution",
-                            "latexName": null,
-                            "definitionIndex": 0,
-                            "marks": 1,
-                            "marksMin": 0,
-                            "marksMax": 0,
-                            "description": null
-                        }
-                    ]
-                },
-                "interactionType": "multistep",
-                "tags": []
-            }
-        }
-    }
+    question: {"response_id":"custom-806e20c4-d2d2-465c-8a21-35674d6d796f","type":"custom","stimulus":"Stimulus of the custom question","js":{"question":"http://localhost/akit/learnosity-akit/dist/question.js","scorer":"http://localhost/akit/learnosity-akit/dist/scorer.js"},"css":"","valid_response":"not applicable","instant_feedback":true,"akit_exercise_id":"0559dfb3-e548-4da3-909a-ad3526722368","score":1},
+    response: {"interactions":[{"type":"multistep","scorable":true,"refId":"hkQtm"}],"sessionId":"806e20c4-d2d2-465c-8a21-35674d6d796f","refId":"hkQtm","scoring":{"marks":{"max":1,"min":1},"marksEarned":1,"marksTotal":1,"penalties":{"marksPenalty":0,"hintsRequested":0,"mathErrors":0,"notationErrors":0},"finished":true,"stepList":[{"parents":[],"name":"solution","latexName":null,"definitionIndex":0,"marks":1,"marksMin":1,"marksMax":1,"description":null}]},"progress":1,"tags":[{"ID":"ExpandSingleBrackets","weight":100},{"ID":"EquationsBalanceMethodArrangeTerms","weight":100},{"ID":"EquationsOperationsAdd","weight":100},{"ID":"AlgebraAddingLikeTerms","weight":100},{"ID":"EquationsBalanceMethodArrangeTerms","weight":100},{"ID":"EquationsOperationsAdd","weight":100},{"ID":"EquationsBalanceMethodDivideCoefficient","weight":100},{"ID":"EquationsOperationsMultiply","weight":100}]}
 };
 
 // Path to the scorer file that you need to debug

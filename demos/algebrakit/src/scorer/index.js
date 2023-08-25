@@ -1,11 +1,23 @@
+import {getScoreForSession} from '../util/akit';
+
 export default class Scorer {
+
     constructor(question, response) {
         this.question = question;
         this.response = response;
+        this.sessionScore = null;
     }
 
     /**
      * Check if the current question's response is valid or not
+     * 
+     * Note: this implementation is asynchronous, so Learnosity has to use this
+     * function like this:
+     * let valid = await Scorer.isValid()
+     * 
+     * let valid = Scorer.isValid()
+     * 
+     * 
      * (Required)
      * @returns {boolean}
      */
@@ -15,13 +27,29 @@ export default class Scorer {
         // - skill tags      (references to known mathematical skills and mistakes)
         // - progress        (value between 0-100)
         // - partial scoring (marksTotal, marksEarned)
-        if(this.response && this.response.data){
-            let scoring = this.response.data.scoring;
-            if(scoring) {
-                return !!scoring.finished;
+
+        // Assuming the session contains only one scorable interaction, which is what Learnosity expects,
+        //
+        if(this.response) {
+            if(this.response.scoring) {
+                console.log(`isValid (from response data) result = ${this.response.scoring.finished}`)
+                return this.response.scoring.finished;
             }
+
+            let promise;
+            if(!this.sessionScore) {
+                promise = getScoreForSession(this.response.sessionId);
+            } else {
+                promise = Promise.resolve(this.sessionScore);
+            }
+    
+            return promise.then(score => {
+                this.sessionScore = score;
+                console.log(`isValid (asynchronous) result = ${this.sessionScore.scoring.finished}`)
+                return this.sessionScore.scoring.finished;
+            });
         }
-        return false;
+
     }
 
     /**
@@ -43,13 +71,36 @@ export default class Scorer {
      * @returns {number|null}
      */
     score() {
-        if(this.response && this.response.data){
-            let scoring = this.response.data.scoring;
-            if(scoring) {
-                return scoring.marksEarned / scoring.marksTotal * this.maxScore();
+        if(this.response) {
+            if(this.response.event!='interaction-evaluate') return null;
+            
+            // Take score from response data, if possible.
+            // E.g. does not work when the Algebrakit question runs in assessment mode.
+            // Also, this assumes that the session contains just one scorable question.
+            if(this.response.scoring) {
+                let sc = this.response.scoring;
+                let score = sc.marksEarned / sc.marksTotal * this.maxScore();
+                console.log(`score (from response data) = ${score}`);
+                return score;
             }
+
+            let promise;
+            if(!this.sessionScore) {
+                promise = getScoreForSession(this.response.sessionId);
+            } else {
+                promise = Promise.resolve(this.sessionScore);
+            }
+    
+            return promise.then(sc => {
+                this.sessionScore = sc;
+                let score =  sc.marksEarned / sc.marksTotal * this.maxScore();
+                console.log(`score (asynchronous) = ${score}`)
+                return score;
+            });
+        } else {
+            return null;
         }
-        return 0;
+
     }
 
     /**
@@ -68,8 +119,8 @@ export default class Scorer {
      * @returns {boolean}
      */
     canValidateResponse() {
-        if(this.response && this.response.data){
-            let scoring = this.response.data.scoring;
+        if(this.response){
+            let scoring = this.response.scoring;
             return !!scoring;
         }
         return true;

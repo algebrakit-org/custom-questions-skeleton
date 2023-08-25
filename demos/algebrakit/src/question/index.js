@@ -1,5 +1,6 @@
 import { PREFIX } from './constants';
 import { v4 as uuidv4 } from 'uuid';
+import { createSession, addAkitScriptTagIfNeccessary } from '../util/akit';
 
 // When previewing an exercise, we need to create an Algebrakit session ID.
 // Normally, this session ID is equal to the response ID of Learnosity, which is a UUID. 
@@ -17,8 +18,8 @@ const SESSION_CACHE = {
 // The API key should not be available in the frontend
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const AKIT_API_KEY = 'bGVhcm5vc2l0eS5kZW1vLWludGVncmF0aW9uLjRmMzg3MTFlMDQ0MTJmMGZkZTk2NjNhMmVjMzVhYTU5M2VjYWM3ZTBiZDQ2ZWUyM2MxYmRlZjY1ZWJlNzc5NDQ1MzY5MjE2NjhiZDY2ZWY2MmNhMjE1ZmVlNDRmZjQ4MA==';
-// const AKIT_HOST  = 'https://api.staging.algebrakit.com';
-// const AKIT_SCRIPT_SRC = 'https://widgets.staging.algebrakit.com/akit-widgets.min.js';
+// const AKIT_HOST  = 'https://api.algebrakit.com';
+// const AKIT_SCRIPT_SRC = 'https://widgets.algebrakit.com/akit-widgets.min.js';
 
 const AKIT_HOST  = 'http://localhost:3000';
 const AKIT_SCRIPT_SRC = 'http://localhost:4000/akit-widgets.js';
@@ -61,7 +62,7 @@ export default class AlgebrakitQuestion {
         this.exerciseElm = null;
         this.session = null;   // the response from /session/create
         
-        this.addAkitScriptTagIfNeccessary()
+        addAkitScriptTagIfNeccessary()
             .then(() => this.render())
             .then(() =>{
                 this.registerPublicMethods();
@@ -88,25 +89,9 @@ export default class AlgebrakitQuestion {
         // - add the Algebrakit x-api-key header to the request.
         // update 12-2022: Always call create session, because init.state is unreliable
         //                 If the session already exists, than this session will be retrieved
-        promise = this.post(
-            '/session/create', 
-            {
-                exercises: [{
-                    exerciseId: this.akitExerciseId,
-                    version: 'latest',
-                    _overrideSessionId: this.sessionId
-                }],
-                assessmentMode: false,
-                'api-version': 2
-            }).then(resp => {
-                if(!resp || resp.length!=1 || !resp[0].success) throw Error('Failed to create Algebrakit session');
-    
-                // For simplicity: assuming we generated a single session for a single exercise ID (no batch processing)
-                this.session = resp[0].sessions[0];
-            });
-
-        return promise.then(() => {
-
+        return createSession(this.akitExerciseId, this.sessionId).then((resp) => {
+            this.session = resp;
+            
             let akitStr;
             if(this.session && this.session.html) {
                 //prevent roundtrip to the server for initialization by using the optimized html
@@ -229,13 +214,10 @@ export default class AlgebrakitQuestion {
                             refId: obj.refId,
                             scoring: obj.data.scoring,
                             progress: obj.data.progress,
-                            tags: obj.data.tags
+                            tags: obj.data.tags,
+                            event: obj.event
                         }
                         events.trigger('changed', scoreObj)
-
-                        // this.getScore(this.sessionId).then(scoreResult => {
-                        //     events.trigger('changed', scoreResult)
-                        // });
                     }
                     break;
                 }
@@ -256,95 +238,6 @@ export default class AlgebrakitQuestion {
         });
     }
 
-    getScore(sessionId) {
-        return this.post(
-            '/session/score', 
-            {
-                sessionId: sessionId,
-                'api-version': 2
-            });
-    }
-
-    /**
-     * Perform Post
-     * @param {string} url 
-     * @param {any} data 
-     * @returns a promise with the response if succesful. If not succesful, rejects with an error message (string)
-     */
-    post(url, data) {
-
-        return new Promise(function (resolve, reject) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', AKIT_HOST+url, true);
-            xhr.setRequestHeader('x-api-key', AKIT_API_KEY);
-            xhr.onload = function () {
-                if (xhr.status === 200) {// This is called even on 404 etc, so check the status
-                    var contentType = xhr.getResponseHeader('content-type');
-                    if (contentType && contentType.search('application/json') >= 0) {
-                        let result = {};
-                        if (xhr.responseText.length > 0) {
-                            result = eval('(' + xhr.responseText + ')');
-                        }
-                        resolve(result)
-                    } else {
-                        reject(Error('Invalid response from akit proxy'));
-                    }
-                } else {
-                    if (xhr.response) {
-                        reject(Error(xhr.response));
-                    }
-                    reject(Error(xhr.statusText));
-                }
-            };
-            // Handle network errors
-            xhr.onerror = function (args) {
-                reject(Error("Network Error"));
-            };
-    
-            // Make the request
-            var isBinary = (data.constructor === FormData);
-            if (isBinary) {
-                xhr.overrideMimeType("text/plain; charset=x-user-defined");
-                xhr.responseType = "arraybuffer"; //xhr 2
-            } else if (typeof (data) === 'string') {
-                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-            } else {
-                xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                data = JSON.stringify(data);
-            }
-            xhr.send(data);
-        });
-    }
-
-    /**
-     * Load the Algebrakit frontend API by adding the <script src="https://widgets.algebrakit.com/akit-widgets.min.js"> to the DOM.
-     * Returns when the script is loaded and executed (and so the AlgebraKIT object is available).
-     */
-    addAkitScriptTagIfNeccessary() {
-        if(window.AlgebraKIT && window.AlgebraKIT._api) return Promise.resolve();
-
-        window.AlgebraKIT = AKIT_CONFIG;
-        return new Promise(function(resolve, reject) {
-            const s = document.createElement('script');
-            let r = false;
-            s.type = 'text/javascript';
-            s.src = AKIT_SCRIPT_SRC;
-            s.async = true;
-            s.onerror = function(err) {
-              reject(err, s);
-            };
-            s.onload = s.onreadystatechange = function() {
-              // console.log(this.readyState); // uncomment this line to see which ready states are called.
-              if (!r && (!this.readyState || this.readyState == 'complete')) {
-                r = true;
-                resolve();
-              }
-            };
-            const t = document.getElementsByTagName('script')[0];
-            t.parentElement.insertBefore(s, t);
-          });
-        
-    }
 }
 
 
