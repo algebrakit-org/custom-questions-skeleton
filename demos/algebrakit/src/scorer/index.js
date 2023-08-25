@@ -48,6 +48,8 @@ export default class Scorer {
                 console.log(`isValid (asynchronous) result = ${this.sessionScore.scoring.finished}`)
                 return this.sessionScore.scoring.finished;
             });
+        } else {
+            return false;
         }
 
     }
@@ -62,7 +64,7 @@ export default class Scorer {
      */
     validateIndividualResponses() {
         // TODO: Requires implementation
-        return null;
+        return {};
     }
 
     /**
@@ -98,7 +100,7 @@ export default class Scorer {
                 return score;
             });
         } else {
-            return null;
+            return 0;
         }
 
     }

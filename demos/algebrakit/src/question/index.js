@@ -218,9 +218,18 @@ export default class AlgebrakitQuestion {
                             event: obj.event
                         }
                         events.trigger('changed', scoreObj)
+
+                        console.log('QUESTION JSON');
+                        console.log(JSON.stringify(this.init.question));
+
+                        console.log('RESPONSE JSON');
+                        console.log(JSON.stringify(scoreObj));
+
                     }
                     break;
                 }
+
+
                 default: {
                     //skip
                     break;
