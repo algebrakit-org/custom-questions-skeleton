@@ -26,7 +26,8 @@
     "prod": "yarn install && webpack --mode production",
     "debug-server-scorer": "node ./debugServerScorer.js",
     "unit-tests": "jest",
-    "unit-tests-watch": "jest --watch"
+    "unit-tests-watch": "jest --watch",
+    "deployS3": "npm run build && aws s3 sync ./dist s3://learnosity.prod.algebrakit.com --exclude=\"*.git/*\" && aws cloudfront create-invalidation --distribution-id E1BL5Q2CCZ552E --paths \"/*\"\n"
   },
   "dependencies": {
     "uuid": "^9.0.0"

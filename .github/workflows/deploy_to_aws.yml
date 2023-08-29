@@ -1,29 +1,29 @@
-name: Deploy to production.
-on:
-  push:
-    branches:
-      - master
-jobs:
-  run:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./demos/algebrakit
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install and build
-        run: npm run prod
-      - name: Deploy
-        uses: reggionick/s3-deploy@v3
-        with:
-          folder: demos/algebrakit/dist
-          bucket: learnosity.prod.algebrakit.com
-          bucket-region: eu-west-1
-          dist-id: E1BL5Q2CCZ552E
-          invalidation: "/*"
-          delete-removed: true
-          cache: "31536000"
-          files-to-include: "**"
+# name: Deploy to production.
+# on:
+#   push:
+#     branches:
+#       - master
+# jobs:
+#   run:
+#     runs-on: ubuntu-latest
+#     defaults:
+#       run:
+#         working-directory: ./demos/algebrakit
+#     env:
+#       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#     steps:
+#       - uses: actions/checkout@v3
+#       - name: Install and build
+#         run: npm run prod
+#       - name: Deploy
+#         uses: reggionick/s3-deploy@v3
+#         with:
+#           folder: demos/algebrakit/dist
+#           bucket: learnosity.prod.algebrakit.com
+#           bucket-region: eu-west-1
+#           dist-id: E1BL5Q2CCZ552E
+#           invalidation: "/*"
+#           delete-removed: true
+#           cache: "31536000"
+#           files-to-include: "**"
